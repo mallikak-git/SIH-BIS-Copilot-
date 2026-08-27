@@ -18,9 +18,9 @@ This file records the official BIS sources used for the product knowledge datase
 - Source: Official BIS
 
 ## 4. LED Lamps
-- Standard: IS 16102 (Part 1)
-- Product: Self-Ballasted LED Lamps for General Lighting Services
-- Source: Official BIS
+- Standard: IS 16102 (Part 1):2026
+- Product: Self-Ballasted LED Lamps for General Lighting Services-Part 1:Safety Requirements (First Revision)
+- Source: Official BIS LIMS/BIS standard information
 
 ## 5. Packaged Drinking Water
 - Standard: IS 14543:2024
