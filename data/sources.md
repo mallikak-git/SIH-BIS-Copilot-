@@ -49,3 +49,18 @@ This file records the official BIS sources used for the product knowledge datase
 - Keep the BIS standard number and revision in the dataset.
 - Update the dataset when BIS publishes a revised standard.
 - Do not rely on third-party websites as the primary source.
+
+## 9. Gold Hallmarking
+
+- Standard: IS 1417:2016
+- Product: Gold and gold alloys, jewellery/artefacts — Fineness and marking — Specification (Fourth Revision)
+- Source: Official BIS LIMS / BIS Hallmarking information
+- Reference: Official BIS LIMS — IS 1417 (2016)
+
+## 10. Silver Hallmarking
+
+- Standard: IS 2112:2025
+- Product: Silver and Silver Alloys Jewellery/Artefacts — Fineness and Marking — Specification
+- Source: Official BIS Hallmarking information
+- Reference: Official BIS — IS 2112:2025
+- Note: IS 2112:2025 replaces IS 2112:2014.
