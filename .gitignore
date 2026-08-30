@@ -1,5 +1,5 @@
-node_modules/
-.env
-*.env
-dist/
-.vite/
+﻿.venv/
+__pycache__/
+*.pyc
+.cache/
+vector_store/

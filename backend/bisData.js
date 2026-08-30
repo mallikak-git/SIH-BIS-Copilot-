@@ -2,13 +2,17 @@ const fs = require("fs");
 const path = require("path");
 const csv = require("csv-parser");
 
-// Path to the GitHub data
+// bisData.js is inside:
+// SIH-BIS-Copilot-/backend/
+//
+// CSV is inside:
+// SIH-BIS-Copilot-/data/bis_products.csv
+
 const csvPath = path.join(
   __dirname,
   "..",
-  "SIH-BIS-Copilot-",
   "data",
-  "bis_product.csv"
+  "bis_products.csv"
 );
 
 let products = [];
@@ -19,6 +23,9 @@ let products = [];
 function loadProducts() {
   return new Promise((resolve, reject) => {
     products = [];
+
+    console.log("Looking for BIS CSV at:");
+    console.log(csvPath);
 
     if (!fs.existsSync(csvPath)) {
       return reject(
@@ -85,11 +92,12 @@ function searchProducts(query) {
         }
       });
 
-      // Give extra importance to product name/category
+      // Product name
       const productName = (
         product["Product Name"] || ""
       ).toLowerCase();
 
+      // Product category
       const category = (
         product["Product Category"] || ""
       ).toLowerCase();
