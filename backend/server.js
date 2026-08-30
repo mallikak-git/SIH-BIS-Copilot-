@@ -6,6 +6,7 @@ const chatRoutes = require("./routes/chat");
 const analyzerRoutes = require("./routes/analyzer");
 const readinessRoutes = require("./routes/readiness");
 const knowledgeRoutes = require("./routes/knowledge");
+const authRoutes = require("./routes/auth");
 
 const app = express();
 
@@ -17,7 +18,10 @@ const PORT = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+    ],
   })
 );
 
@@ -49,6 +53,12 @@ app.use("/api/readiness", readinessRoutes);
 app.use("/api/knowledge", knowledgeRoutes);
 
 /* =========================
+   AUTHENTICATION ROUTES
+========================= */
+
+app.use("/api/auth", authRoutes);
+
+/* =========================
    API STATUS
 ========================= */
 
@@ -58,12 +68,17 @@ app.get("/api", (req, res) => {
     application: "BIS-Copilot API",
 
     endpoints: {
+      authRegister: "POST /api/auth/register",
+      authLogin: "POST /api/auth/login",
+
       chat: "POST /api/chat",
       analyze: "POST /api/analyze",
       readiness: "POST /api/readiness",
+
       products: "GET /api/knowledge/products",
       search: "GET /api/knowledge/search?q=...",
       standard: "GET /api/knowledge/standards/:id",
+
       evidence: "GET /api/evidence/:product",
       updateEvidence: "PATCH /api/evidence/:product/:id",
     },
@@ -219,6 +234,7 @@ const server = app.listen(PORT, () => {
   console.log(`Server:  http://localhost:${PORT}`);
   console.log(`API:     http://localhost:${PORT}/api`);
   console.log("------------------------------------");
+  console.log("Auth:       /api/auth");
   console.log("Chat:       /api/chat");
   console.log("Analyzer:   /api/analyze");
   console.log("Readiness:  /api/readiness");
@@ -248,7 +264,6 @@ process.on("uncaughtException", (error) => {
 process.on("unhandledRejection", (error) => {
   console.error("====================================");
   console.error("UNHANDLED REJECTION");
-  console.error("====================================");
   console.error(error);
 });
 
@@ -261,4 +276,5 @@ server.on("error", (error) => {
   console.error("SERVER LISTEN ERROR");
   console.error("====================================");
   console.error(error);
+  console.error("====================================");
 });

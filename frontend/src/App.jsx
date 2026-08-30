@@ -1,12 +1,46 @@
 import { useState } from "react";
+import Auth from "./Auth";
 import Chat from "./Chat";
 import Analyzer from "./ProductAnalyzer";
 import Readiness from "./Readiness";
 import Evidence from "./Evidence";
 
 function App() {
+  // Check whether the user is already logged in
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem("bisUser");
+
+    if (savedUser) {
+      try {
+        return JSON.parse(savedUser);
+      } catch {
+        return null;
+      }
+    }
+
+    return null;
+  });
+
   const [page, setPage] = useState("home");
   const [productData, setProductData] = useState(null);
+
+  /* ================= AUTH ================= */
+
+  const handleLogin = (loggedInUser) => {
+    setUser(loggedInUser);
+    setPage("home");
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("bisToken");
+    localStorage.removeItem("bisUser");
+
+    setUser(null);
+    setProductData(null);
+    setPage("home");
+  };
+
+  /* ================= NAVIGATION ================= */
 
   const goHome = () => setPage("home");
   const openChat = () => setPage("chat");
@@ -18,6 +52,12 @@ function App() {
     setProductData(data);
   };
 
+  /* ================= LOGIN REQUIRED ================= */
+
+  if (!user) {
+    return <Auth onLogin={handleLogin} />;
+  }
+
   /* ================= HOME ================= */
 
   if (page === "home") {
@@ -25,10 +65,15 @@ function App() {
       <div className="min-h-screen bg-slate-50 text-slate-900">
 
         {/* NAVBAR */}
+
         <nav className="border-b bg-white">
+
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
 
-            <button onClick={goHome} className="text-left">
+            <button
+              onClick={goHome}
+              className="text-left"
+            >
               <h1 className="text-2xl font-bold text-blue-700">
                 BIS-Copilot
               </h1>
@@ -38,17 +83,31 @@ function App() {
               </p>
             </button>
 
-            <div className="flex items-center gap-4">
-              <button className="text-sm font-medium text-blue-700">
-                English
+            <div className="flex items-center gap-5">
+
+              <div className="text-right">
+
+                <p className="text-sm font-semibold text-slate-800">
+                  {user.name}
+                </p>
+
+                <p className="text-xs text-slate-500">
+                  {user.email}
+                </p>
+
+              </div>
+
+              <button
+                onClick={handleLogout}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-red-400 hover:text-red-600"
+              >
+                Logout
               </button>
 
-              <button className="text-sm text-slate-600 hover:text-blue-700">
-                తెలుగు
-              </button>
             </div>
 
           </div>
+
         </nav>
 
         {/* HERO */}
@@ -331,7 +390,9 @@ function PageWrapper({ children, onHome }) {
         ← Home
       </button>
 
-      {children}
+      <div className="pt-16">
+        {children}
+      </div>
 
     </div>
   );
