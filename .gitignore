@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 .cache/
 vector_store/
+backend/.env
+backend/node_modules/
