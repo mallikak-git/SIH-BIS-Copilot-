@@ -6,17 +6,19 @@ const { parse } = require("csv-parse/sync");
 // BIS CSV DATASET PATH
 // ==========================================
 //
-// Current structure:
+// Project structure:
 //
 // SIH-BIS-Copilot-/
 // ├── data/
 // │   └── bis_products.csv
+// │
 // └── backend/
 //     └── knowledge/
 //         └── csvKnowledge.js
 //
 // From backend/knowledge/:
 // ../../data/bis_products.csv
+//
 // ==========================================
 
 const csvPath = path.join(
@@ -49,38 +51,41 @@ function loadBISProducts() {
     }
 
     // Read CSV
-    const csvData = fs.readFileSync(csvPath, "utf8");
+    const csvData = fs.readFileSync(
+      csvPath,
+      "utf8"
+    );
 
     // Parse CSV
     const records = parse(csvData, {
       columns: true,
       skip_empty_lines: true,
+      bom: true,
+      relax_column_count: true,
       trim: true,
     });
 
     console.log(
-      `SUCCESS: Loaded ${records.length} BIS products from CSV`
+      `BIS CSV products loaded: ${records.length}`
     );
 
     return records;
+
   } catch (error) {
-    console.error("ERROR loading BIS CSV:");
-    console.error(error.message);
+    console.error(
+      "ERROR loading BIS CSV:",
+      error.message
+    );
 
     return [];
   }
 }
 
 // ==========================================
-// LOAD PRODUCTS
+// LOAD DATASET ON STARTUP
 // ==========================================
 
 const bisProducts = loadBISProducts();
-
-console.log(
-  "BIS CSV products loaded:",
-  bisProducts.length
-);
 
 // ==========================================
 // EXPORT

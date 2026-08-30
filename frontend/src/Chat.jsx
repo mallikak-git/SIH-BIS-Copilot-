@@ -51,7 +51,6 @@ function Chat() {
         );
       }
 
-      // Safely convert everything to displayable text
       const answer =
         typeof data?.answer === "string"
           ? data.answer
@@ -67,9 +66,45 @@ function Chat() {
         ? data.evidence
         : [];
 
+      const testingRequirements = Array.isArray(
+        data?.testingRequirements
+      )
+        ? data.testingRequirements
+        : [];
+
       const confidence =
         typeof data?.confidence === "string"
           ? data.confidence
+          : "";
+
+      const product =
+        typeof data?.product === "string"
+          ? data.product
+          : "";
+
+      const category =
+        typeof data?.category === "string"
+          ? data.category
+          : "";
+
+      const standard =
+        typeof data?.standard === "string"
+          ? data.standard
+          : "";
+
+      const standardTitle =
+        typeof data?.standardTitle === "string"
+          ? data.standardTitle
+          : "";
+
+      const certificationInformation =
+        typeof data?.certificationInformation === "string"
+          ? data.certificationInformation
+          : "";
+
+      const source =
+        typeof data?.source === "string"
+          ? data.source
           : "";
 
       setMessages((previous) => [
@@ -79,7 +114,14 @@ function Chat() {
           text: answer,
           requirements,
           evidence,
+          testingRequirements,
           confidence,
+          product,
+          category,
+          standard,
+          standardTitle,
+          certificationInformation,
+          source,
         },
       ]);
     } catch (error) {
@@ -129,6 +171,7 @@ function Chat() {
           </div>
 
           <div className="flex gap-4">
+
             <button className="text-sm font-medium text-blue-700">
               English
             </button>
@@ -136,6 +179,7 @@ function Chat() {
             <button className="text-sm text-slate-600">
               తెలుగు
             </button>
+
           </div>
 
         </div>
@@ -187,11 +231,15 @@ function Chat() {
                 }
               >
 
+                {/* ASSISTANT NAME */}
+
                 {message.role === "assistant" && (
                   <p className="font-semibold text-blue-700">
                     BIS-Copilot
                   </p>
                 )}
+
+                {/* MAIN ANSWER */}
 
                 <p
                   className={
@@ -203,16 +251,65 @@ function Chat() {
                   {message.text}
                 </p>
 
+                {/* PRODUCT MATCH */}
+
+                {message.role === "assistant" &&
+                  message.product && (
+
+                    <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50 p-4">
+
+                      <p className="text-sm font-bold text-blue-800">
+                        Product Match
+                      </p>
+
+                      <p className="mt-2 text-sm text-slate-700">
+                        {message.product}
+                      </p>
+
+                      {message.category && (
+                        <p className="mt-1 text-xs text-slate-500">
+                          Category: {message.category}
+                        </p>
+                      )}
+
+                    </div>
+
+                  )}
+
+                {/* BIS STANDARD */}
+
+                {message.role === "assistant" &&
+                  message.standard && (
+
+                    <div className="mt-5 rounded-xl border bg-white p-4">
+
+                      <p className="text-sm font-bold text-slate-500">
+                        Applicable BIS Standard
+                      </p>
+
+                      <h3 className="mt-2 text-xl font-bold text-slate-900">
+                        {message.standard}
+                      </h3>
+
+                      {message.standardTitle && (
+                        <p className="mt-2 text-sm leading-6 text-slate-600">
+                          {message.standardTitle}
+                        </p>
+                      )}
+
+                    </div>
+
+                  )}
+
                 {/* REQUIREMENTS */}
 
                 {message.role === "assistant" &&
-                  Array.isArray(message.requirements) &&
-                  message.requirements.length > 0 && (
+                  message.requirements?.length > 0 && (
 
                     <div className="mt-5">
 
                       <p className="text-sm font-bold text-slate-800">
-                        📋 Compliance requirements
+                        📋 Key Requirements
                       </p>
 
                       <div className="mt-3 space-y-2">
@@ -224,10 +321,53 @@ function Chat() {
                               key={itemIndex}
                               className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700"
                             >
-                              ✓{" "}
+                              <span className="font-bold text-blue-600">
+                                ✓
+                              </span>{" "}
                               {typeof item === "string"
                                 ? item
-                                : JSON.stringify(item)}
+                                : item?.title ||
+                                  item?.description ||
+                                  JSON.stringify(item)}
+                            </div>
+
+                          )
+                        )}
+
+                      </div>
+
+                    </div>
+
+                  )}
+
+                {/* TESTING REQUIREMENTS */}
+
+                {message.role === "assistant" &&
+                  message.testingRequirements?.length > 0 && (
+
+                    <div className="mt-5">
+
+                      <p className="text-sm font-bold text-slate-800">
+                        🧪 Testing Requirements
+                      </p>
+
+                      <div className="mt-3 space-y-2">
+
+                        {message.testingRequirements.map(
+                          (item, itemIndex) => (
+
+                            <div
+                              key={itemIndex}
+                              className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800"
+                            >
+                              <span className="font-bold">
+                                ✓
+                              </span>{" "}
+                              {typeof item === "string"
+                                ? item
+                                : item?.title ||
+                                  item?.description ||
+                                  JSON.stringify(item)}
                             </div>
 
                           )
@@ -242,13 +382,12 @@ function Chat() {
                 {/* EVIDENCE */}
 
                 {message.role === "assistant" &&
-                  Array.isArray(message.evidence) &&
-                  message.evidence.length > 0 && (
+                  message.evidence?.length > 0 && (
 
                     <div className="mt-5">
 
                       <p className="text-sm font-bold text-slate-800">
-                        📄 Evidence to consider
+                        📄 Supporting Evidence
                       </p>
 
                       <div className="mt-3 space-y-2">
@@ -260,16 +399,58 @@ function Chat() {
                               key={itemIndex}
                               className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-800"
                             >
-                              •{" "}
+                              <span className="font-bold">
+                                •
+                              </span>{" "}
                               {typeof item === "string"
                                 ? item
-                                : JSON.stringify(item)}
+                                : item?.title ||
+                                  item?.description ||
+                                  JSON.stringify(item)}
                             </div>
 
                           )
                         )}
 
                       </div>
+
+                    </div>
+
+                  )}
+
+                {/* CERTIFICATION */}
+
+                {message.role === "assistant" &&
+                  message.certificationInformation && (
+
+                    <div className="mt-5 rounded-xl border bg-slate-50 p-4">
+
+                      <p className="text-sm font-bold text-slate-800">
+                        Certification Information
+                      </p>
+
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        {message.certificationInformation}
+                      </p>
+
+                    </div>
+
+                  )}
+
+                {/* SOURCE */}
+
+                {message.role === "assistant" &&
+                  message.source && (
+
+                    <div className="mt-4">
+
+                      <p className="text-xs text-slate-500">
+                        Source
+                      </p>
+
+                      <p className="mt-1 text-xs font-medium text-slate-700">
+                        {message.source}
+                      </p>
 
                     </div>
 
@@ -392,6 +573,16 @@ function Chat() {
         </div>
 
       </main>
+
+      {/* FOOTER */}
+
+      <footer className="border-t bg-white">
+
+        <div className="mx-auto max-w-5xl px-6 py-6 text-center text-sm text-slate-400">
+          BIS-Copilot · Intelligent BIS Compliance Assistant
+        </div>
+
+      </footer>
 
     </div>
   );
