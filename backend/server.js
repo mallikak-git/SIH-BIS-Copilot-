@@ -64,8 +64,117 @@ app.get("/api", (req, res) => {
       products: "GET /api/knowledge/products",
       search: "GET /api/knowledge/search?q=...",
       standard: "GET /api/knowledge/standards/:id",
+      evidence: "GET /api/evidence/:product",
+      updateEvidence: "PATCH /api/evidence/:product/:id",
     },
   });
+});
+
+/* =========================
+   EVIDENCE API
+========================= */
+
+const evidenceStore = {};
+
+/* Get evidence for a product */
+app.get("/api/evidence/:product", (req, res) => {
+  try {
+    const product = decodeURIComponent(req.params.product);
+
+    if (!evidenceStore[product]) {
+      evidenceStore[product] = [
+        {
+          id: 1,
+          name: "Product Specification Sheet",
+          type: "Document",
+          required: true,
+          completed: false,
+        },
+        {
+          id: 2,
+          name: "Product Test Report",
+          type: "Test Report",
+          required: true,
+          completed: false,
+        },
+        {
+          id: 3,
+          name: "Technical Documentation",
+          type: "Document",
+          required: true,
+          completed: false,
+        },
+        {
+          id: 4,
+          name: "BIS Standard Reference",
+          type: "Standard",
+          required: true,
+          completed: false,
+        },
+        {
+          id: 5,
+          name: "Declaration / Supporting Evidence",
+          type: "Evidence",
+          required: false,
+          completed: false,
+        },
+      ];
+    }
+
+    res.json({
+      success: true,
+      product,
+      evidence: evidenceStore[product],
+    });
+  } catch (error) {
+    console.error("Evidence GET error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to load evidence.",
+    });
+  }
+});
+
+/* Update evidence status */
+app.patch("/api/evidence/:product/:id", (req, res) => {
+  try {
+    const product = decodeURIComponent(req.params.product);
+    const id = Number(req.params.id);
+
+    if (!evidenceStore[product]) {
+      return res.status(404).json({
+        success: false,
+        message: "Product evidence not found",
+      });
+    }
+
+    const item = evidenceStore[product].find(
+      (evidence) => evidence.id === id
+    );
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Evidence item not found",
+      });
+    }
+
+    item.completed = Boolean(req.body.completed);
+
+    res.json({
+      success: true,
+      message: "Evidence updated",
+      evidence: item,
+    });
+  } catch (error) {
+    console.error("Evidence PATCH error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to update evidence.",
+    });
+  }
 });
 
 /* =========================
@@ -100,181 +209,8 @@ app.use((err, req, res, next) => {
 /* =========================
    START SERVER
 ========================= */
-// ===============================
-// EVIDENCE API
-// ===============================
 
-const evidenceStore = {};
-
-// Get evidence for a product
-app.get("/api/evidence/:product", (req, res) => {
-  const product = decodeURIComponent(req.params.product);
-
-  if (!evidenceStore[product]) {
-    evidenceStore[product] = [
-      {
-        id: 1,
-        name: "Product Specification Sheet",
-        type: "Document",
-        required: true,
-        completed: false,
-      },
-      {
-        id: 2,
-        name: "Product Test Report",
-        type: "Test Report",
-        required: true,
-        completed: false,
-      },
-      {
-        id: 3,
-        name: "Technical Documentation",
-        type: "Document",
-        required: true,
-        completed: false,
-      },
-      {
-        id: 4,
-        name: "BIS Standard Reference",
-        type: "Standard",
-        required: true,
-        completed: false,
-      },
-      {
-        id: 5,
-        name: "Declaration / Supporting Evidence",
-        type: "Evidence",
-        required: false,
-        completed: false,
-      },
-    ];
-  }
-
-  res.json({
-    product,
-    evidence: evidenceStore[product],
-  });
-});
-
-
-// Update evidence status
-app.patch("/api/evidence/:product/:id", (req, res) => {
-  const product = decodeURIComponent(req.params.product);
-  const id = Number(req.params.id);
-
-  if (!evidenceStore[product]) {
-    return res.status(404).json({
-      message: "Product evidence not found",
-    });
-  }
-
-  const item = evidenceStore[product].find(
-    (evidence) => evidence.id === id
-  );
-
-  if (!item) {
-    return res.status(404).json({
-      message: "Evidence item not found",
-    });
-  }
-
-  item.completed = Boolean(req.body.completed);
-
-  res.json({
-    message: "Evidence updated",
-    evidence: item,
-  });
-});
-// ===============================
-// CHAT API
-// ===============================
-
-app.post("/api/chat", async (req, res) => {
-  try {
-    const { message } = req.body;
-
-    if (!message || !message.trim()) {
-      return res.status(400).json({
-        message: "Please enter a question.",
-      });
-    }
-
-    const question = message.trim().toLowerCase();
-
-    let reply =
-      "I can help you understand BIS standards, product requirements, testing, documents, and compliance steps. Please provide more details about your product.";
-
-    // Ceiling fan
-    if (
-      question.includes("ceiling fan") ||
-      question.includes("fan")
-    ) {
-      reply =
-        "For a domestic ceiling fan, BIS compliance generally involves identifying the applicable Indian Standard, checking the product specifications, and ensuring the required testing and documentation are available. Tell me the fan's operating voltage, power rating, and type so I can narrow down the requirements.";
-    }
-
-    // BIS standard
-    else if (
-      question.includes("standard") ||
-      question.includes("is code") ||
-      question.includes("bis code")
-    ) {
-      reply =
-        "The applicable BIS standard depends on the exact product, its specifications, intended use, and applicable regulatory requirements. Please provide the product name, category, model/type, and key technical specifications.";
-    }
-
-    // Testing
-    else if (
-      question.includes("test") ||
-      question.includes("testing")
-    ) {
-      reply =
-        "Testing requirements depend on the applicable BIS standard. Typical compliance evaluation may involve product performance, safety, construction, electrical, mechanical, or other tests specified by the relevant standard.";
-    }
-
-    // Documents
-    else if (
-      question.includes("document") ||
-      question.includes("documents") ||
-      question.includes("paper")
-    ) {
-      reply =
-        "Common compliance evidence can include product specifications, technical documentation, test reports, declarations, and applicable BIS standard references. The exact documents depend on the product and certification route.";
-    }
-
-    // Certification
-    else if (
-      question.includes("certificate") ||
-      question.includes("certification")
-    ) {
-      reply =
-        "BIS certification requirements depend on the product and the applicable conformity assessment scheme. First identify the applicable Indian Standard and then determine the certification or registration route that applies.";
-    }
-
-    // Hello
-    else if (
-      question.includes("hello") ||
-      question.includes("hi") ||
-      question.includes("hey")
-    ) {
-      reply =
-        "Hello! 👋 I'm BIS-Copilot. Tell me about your product and I can help you understand possible BIS standards, evidence, testing, and compliance steps.";
-    }
-
-    res.json({
-      success: true,
-      reply,
-    });
-  } catch (error) {
-    console.error("Chat error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Unable to process your question.",
-    });
-  }
-});
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log("");
   console.log("====================================");
   console.log("          BIS-COPILOT");
@@ -287,8 +223,42 @@ app.listen(PORT, () => {
   console.log("Analyzer:   /api/analyze");
   console.log("Readiness:  /api/readiness");
   console.log("Knowledge:  /api/knowledge");
+  console.log("Evidence:   /api/evidence/:product");
   console.log("------------------------------------");
   console.log("Status: RUNNING");
   console.log("====================================");
   console.log("");
+});
+
+/* =========================
+   PROCESS DIAGNOSTICS
+========================= */
+
+process.on("exit", (code) => {
+  console.log("NODE PROCESS EXITED WITH CODE:", code);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("====================================");
+  console.error("UNCAUGHT EXCEPTION");
+  console.error("====================================");
+  console.error(error);
+});
+
+process.on("unhandledRejection", (error) => {
+  console.error("====================================");
+  console.error("UNHANDLED REJECTION");
+  console.error("====================================");
+  console.error(error);
+});
+
+/* =========================
+   SERVER ERROR
+========================= */
+
+server.on("error", (error) => {
+  console.error("====================================");
+  console.error("SERVER LISTEN ERROR");
+  console.error("====================================");
+  console.error(error);
 });

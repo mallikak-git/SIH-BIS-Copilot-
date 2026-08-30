@@ -5,7 +5,7 @@ const { parse } = require("csv-parse/sync");
 // Path to the SIH BIS CSV dataset
 const csvPath = path.join(
   __dirname,
-  "../../SIH-BIS-Copilot-/data/bis_products.csv"
+  "../../data/bis_products.csv"
 );
 
 function loadBISProducts() {

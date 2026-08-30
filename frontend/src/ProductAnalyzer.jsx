@@ -8,11 +8,17 @@ function ProductAnalyzer({
     productName: "",
     category: "",
     voltage: "",
+    power: "",
+    intendedUse: "",
   });
 
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // =========================================================
+  // HANDLE FORM INPUT
+  // =========================================================
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -23,12 +29,18 @@ function ProductAnalyzer({
     }));
   };
 
+  // =========================================================
+  // ANALYZE PRODUCT
+  // =========================================================
+
   const analyzeProduct = async (event) => {
     event.preventDefault();
 
     setError("");
     setResult(null);
 
+    // Product name and category are required.
+    // Voltage can be N/A for non-electrical products.
     if (
       !form.productName.trim() ||
       !form.category.trim() ||
@@ -56,6 +68,8 @@ function ProductAnalyzer({
             productName: form.productName.trim(),
             category: form.category.trim(),
             voltage: form.voltage.trim(),
+            power: form.power.trim(),
+            intendedUse: form.intendedUse.trim(),
           }),
         }
       );
@@ -70,46 +84,90 @@ function ProductAnalyzer({
 
       setResult(data);
 
-      // Send result to App.jsx
+      // Send complete result to App.jsx
       if (onProductAnalyzed) {
         onProductAnalyzed({
           ...data,
+
           product: {
             productName: form.productName.trim(),
             category: form.category.trim(),
             voltage: form.voltage.trim(),
+            power: form.power.trim(),
+            intendedUse: form.intendedUse.trim(),
+
             ...(data.product || {}),
           },
         });
       }
-
     } catch (err) {
       console.error(err);
 
       setError(
         err.message ||
-        "Unable to connect to the BIS-Copilot backend."
+          "Unable to connect to the BIS-Copilot backend."
       );
     } finally {
       setLoading(false);
     }
   };
 
+  // =========================================================
+  // CLEAR FORM
+  // =========================================================
+
   const clearForm = () => {
     setForm({
       productName: "",
       category: "",
       voltage: "",
+      power: "",
+      intendedUse: "",
     });
 
     setResult(null);
     setError("");
   };
 
+  // =========================================================
+  // EXTRACT BACKEND RESULT
+  // =========================================================
+
+  const analysis = result?.analysis || {};
+  const standards = result?.standards || [];
+
+  const standard = standards.length > 0
+    ? standards[0]
+    : null;
+
+  const requirements =
+    analysis.requirements ||
+    standard?.requirements ||
+    [];
+
+  const testingRequirements =
+    analysis.testingRequirements ||
+    standard?.testingRequirements ||
+    [];
+
+  const evidence =
+    analysis.evidence ||
+    standard?.evidence ||
+    [];
+
+  const isMatched =
+    standards.length > 0;
+
+  // =========================================================
+  // UI
+  // =========================================================
+
   return (
     <div className="min-h-screen bg-slate-50">
 
-      {/* NAVBAR */}
+      {/* =====================================================
+          NAVBAR
+      ===================================================== */}
 
       <nav className="border-b bg-white">
 
@@ -132,7 +190,7 @@ function ProductAnalyzer({
             </button>
 
             <button className="text-sm text-slate-600">
-              తెలుగు
+              Telugu
             </button>
 
           </div>
@@ -141,9 +199,15 @@ function ProductAnalyzer({
 
       </nav>
 
+      {/* =====================================================
+          MAIN
+      ===================================================== */}
+
       <main className="mx-auto max-w-5xl px-6 py-10">
 
-        {/* HEADER */}
+        {/* ===================================================
+            HEADER
+        =================================================== */}
 
         <div className="mb-8">
 
@@ -162,7 +226,9 @@ function ProductAnalyzer({
 
         </div>
 
-        {/* ERROR */}
+        {/* ===================================================
+            ERROR
+        =================================================== */}
 
         {error && (
 
@@ -180,9 +246,15 @@ function ProductAnalyzer({
 
         )}
 
+        {/* ===================================================
+            TWO COLUMN LAYOUT
+        =================================================== */}
+
         <div className="grid gap-8 md:grid-cols-2">
 
-          {/* FORM */}
+          {/* =================================================
+              FORM
+          ================================================= */}
 
           <div className="rounded-3xl border bg-white p-6 shadow-sm">
 
@@ -195,6 +267,8 @@ function ProductAnalyzer({
               className="mt-6 space-y-5"
             >
 
+              {/* PRODUCT NAME */}
+
               <div>
 
                 <label className="mb-2 block text-sm font-semibold">
@@ -202,14 +276,17 @@ function ProductAnalyzer({
                 </label>
 
                 <input
+                  type="text"
                   name="productName"
                   value={form.productName}
                   onChange={handleChange}
                   placeholder="e.g. Domestic Ceiling Fan"
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
 
               </div>
+
+              {/* CATEGORY */}
 
               <div>
 
@@ -218,14 +295,17 @@ function ProductAnalyzer({
                 </label>
 
                 <input
+                  type="text"
                   name="category"
                   value={form.category}
                   onChange={handleChange}
-                  placeholder="e.g. Electrical Equipment"
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500"
+                  placeholder="e.g. Electrical"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
 
               </div>
+
+              {/* VOLTAGE */}
 
               <div>
 
@@ -234,21 +314,62 @@ function ProductAnalyzer({
                 </label>
 
                 <input
+                  type="text"
                   name="voltage"
                   value={form.voltage}
                   onChange={handleChange}
-                  placeholder="e.g. 230 V"
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500"
+                  placeholder="e.g. 230 V or N/A"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
 
               </div>
 
-              <div className="flex gap-3">
+              {/* POWER */}
+
+              <div>
+
+                <label className="mb-2 block text-sm font-semibold">
+                  Power
+                </label>
+
+                <input
+                  type="text"
+                  name="power"
+                  value={form.power}
+                  onChange={handleChange}
+                  placeholder="e.g. 60 W or N/A"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+
+              </div>
+
+              {/* INTENDED USE */}
+
+              <div>
+
+                <label className="mb-2 block text-sm font-semibold">
+                  Intended Use
+                </label>
+
+                <textarea
+                  name="intendedUse"
+                  value={form.intendedUse}
+                  onChange={handleChange}
+                  placeholder="e.g. Domestic use, construction, industrial use"
+                  rows={3}
+                  className="w-full resize-none rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+
+              </div>
+
+              {/* BUTTONS */}
+
+              <div className="flex gap-3 pt-2">
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:bg-slate-300"
+                  className="flex-1 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
                 >
                   {loading
                     ? "Analyzing..."
@@ -258,7 +379,7 @@ function ProductAnalyzer({
                 <button
                   type="button"
                   onClick={clearForm}
-                  className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 hover:border-blue-500"
+                  className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-500 hover:text-blue-600"
                 >
                   Clear
                 </button>
@@ -269,13 +390,19 @@ function ProductAnalyzer({
 
           </div>
 
-          {/* RESULT */}
+          {/* =================================================
+              RESULT
+          ================================================= */}
 
           <div>
 
+            {/* =================================================
+                NO RESULT
+            ================================================= */}
+
             {!result && (
 
-              <div className="flex min-h-[430px] items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white p-8">
+              <div className="flex min-h-[600px] items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white p-8">
 
                 <div className="text-center">
 
@@ -298,11 +425,17 @@ function ProductAnalyzer({
 
             )}
 
+            {/* =================================================
+                RESULT AVAILABLE
+            ================================================= */}
+
             {result && (
 
               <div className="space-y-5">
 
-                {/* RESULT HEADER */}
+                {/* =================================================
+                    RESULT HEADER
+                ================================================= */}
 
                 <div className="rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 p-6 text-white shadow-lg">
 
@@ -318,88 +451,322 @@ function ProductAnalyzer({
                     {form.category} · {form.voltage}
                   </p>
 
-                </div>
+                  {/* POWER + INTENDED USE */}
 
-                {/* STANDARD */}
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
 
-                <div className="rounded-2xl border bg-white p-6 shadow-sm">
+                    <div className="rounded-xl bg-white/10 p-3">
 
-                  <p className="text-sm font-medium text-slate-500">
-                    Applicable Standard
-                  </p>
+                      <p className="text-xs text-blue-100">
+                        Power
+                      </p>
 
-                  <h3 className="mt-2 text-xl font-bold text-slate-900">
+                      <p className="mt-1 font-semibold">
+                        {form.power || "N/A"}
+                      </p>
 
-                    {result.standard ||
-                      result.standardName ||
-                      result.bisStandard ||
-                      "BIS standard identified"}
+                    </div>
 
-                  </h3>
+                    <div className="rounded-xl bg-white/10 p-3">
 
-                  {result.description && (
+                      <p className="text-xs text-blue-100">
+                        Intended Use
+                      </p>
 
-                    <p className="mt-3 text-sm leading-6 text-slate-600">
-                      {result.description}
-                    </p>
+                      <p className="mt-1 font-semibold">
+                        {form.intendedUse || "N/A"}
+                      </p>
 
-                  )}
-
-                </div>
-
-                {/* REQUIREMENTS */}
-
-                <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-                  <h3 className="text-lg font-bold">
-                    Key Requirements
-                  </h3>
-
-                  <div className="mt-4 space-y-3">
-
-                    {(
-                      result.requirements ||
-                      result.keyRequirements ||
-                      [
-                        "Verify applicable BIS standard",
-                        "Complete required product testing",
-                        "Maintain technical documentation",
-                        "Collect supporting evidence",
-                      ]
-                    ).map((item, index) => (
-
-                      <div
-                        key={index}
-                        className="flex items-start gap-3 rounded-xl bg-slate-50 p-3"
-                      >
-
-                        <span className="font-bold text-blue-600">
-                          ✓
-                        </span>
-
-                        <p className="text-sm text-slate-700">
-                          {typeof item === "string"
-                            ? item
-                            : item.title ||
-                              item.description ||
-                              JSON.stringify(item)}
-                        </p>
-
-                      </div>
-
-                    ))}
+                    </div>
 
                   </div>
 
                 </div>
 
-                {/* READINESS BUTTON */}
+                {/* =================================================
+                    MATCH STATUS
+                ================================================= */}
+
+                <div className="rounded-2xl border bg-white p-6 shadow-sm">
+
+                  <p className="text-sm font-medium text-slate-500">
+                    Product Match
+                  </p>
+
+                  <h3 className="mt-2 text-xl font-bold text-slate-900">
+
+                    {isMatched
+                      ? "BIS product record identified"
+                      : "No reliable BIS product match"}
+
+                  </h3>
+
+                  <p className="mt-3 text-sm leading-6 text-slate-600">
+
+                    {analysis.description ||
+                      result.note ||
+                      "Verify the applicable BIS requirements using authoritative BIS information."}
+
+                  </p>
+
+                  {analysis.confidence && (
+
+                    <div className="mt-4">
+
+                      <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                        Confidence: {analysis.confidence}
+                      </span>
+
+                    </div>
+
+                  )}
+
+                </div>
+
+                {/* =================================================
+                    STANDARD
+                ================================================= */}
+
+                {isMatched && (
+
+                  <div className="rounded-2xl border bg-white p-6 shadow-sm">
+
+                    <p className="text-sm font-medium text-slate-500">
+                      Applicable Standard
+                    </p>
+
+                    <h3 className="mt-2 text-xl font-bold text-slate-900">
+                      {standard?.standardNumber ||
+                        "Standard number unavailable"}
+                    </h3>
+
+                    {standard?.title && (
+
+                      <p className="mt-2 text-sm font-medium text-slate-700">
+                        {standard.title}
+                      </p>
+
+                    )}
+
+                    {standard?.applicability && (
+
+                      <p className="mt-3 text-sm leading-6 text-slate-600">
+                        {standard.applicability}
+                      </p>
+
+                    )}
+
+                    {standard?.source && (
+
+                      <p className="mt-4 text-xs text-slate-400">
+                        Source: {standard.source}
+                      </p>
+
+                    )}
+
+                  </div>
+
+                )}
+
+                {/* =================================================
+                    KEY REQUIREMENTS
+                ================================================= */}
+
+                {isMatched && (
+
+                  <div className="rounded-2xl border bg-white p-6 shadow-sm">
+
+                    <h3 className="text-lg font-bold">
+                      Key Requirements
+                    </h3>
+
+                    <div className="mt-4 space-y-3">
+
+                      {requirements.length > 0 ? (
+
+                        requirements.map((item, index) => (
+
+                          <div
+                            key={index}
+                            className="flex items-start gap-3 rounded-xl bg-slate-50 p-3"
+                          >
+
+                            <span className="font-bold text-blue-600">
+                              ✓
+                            </span>
+
+                            <p className="text-sm leading-6 text-slate-700">
+                              {typeof item === "string"
+                                ? item
+                                : item.title ||
+                                  item.description ||
+                                  JSON.stringify(item)}
+                            </p>
+
+                          </div>
+
+                        ))
+
+                      ) : (
+
+                        <div className="rounded-xl bg-slate-50 p-4">
+
+                          <p className="text-sm text-slate-600">
+                            Verify the applicable BIS standard
+                            and product-specific requirements.
+                          </p>
+
+                        </div>
+
+                      )}
+
+                    </div>
+
+                  </div>
+
+                )}
+
+                {/* =================================================
+                    TESTING REQUIREMENTS
+                ================================================= */}
+
+                {isMatched &&
+                  testingRequirements.length > 0 && (
+
+                    <div className="rounded-2xl border bg-white p-6 shadow-sm">
+
+                      <h3 className="text-lg font-bold">
+                        Testing Requirements
+                      </h3>
+
+                      <div className="mt-4 space-y-3">
+
+                        {testingRequirements.map(
+                          (item, index) => (
+
+                            <div
+                              key={index}
+                              className="flex items-start gap-3 rounded-xl bg-slate-50 p-3"
+                            >
+
+                              <span className="font-bold text-blue-600">
+                                ✓
+                              </span>
+
+                              <p className="text-sm leading-6 text-slate-700">
+                                {typeof item === "string"
+                                  ? item
+                                  : item.title ||
+                                    item.description ||
+                                    JSON.stringify(item)}
+                              </p>
+
+                            </div>
+
+                          )
+                        )}
+
+                      </div>
+
+                    </div>
+
+                  )}
+
+                {/* =================================================
+                    EVIDENCE
+                ================================================= */}
+
+                {isMatched &&
+                  evidence.length > 0 && (
+
+                    <div className="rounded-2xl border bg-white p-6 shadow-sm">
+
+                      <h3 className="text-lg font-bold">
+                        Supporting Evidence
+                      </h3>
+
+                      <div className="mt-4 space-y-3">
+
+                        {evidence.map(
+                          (item, index) => (
+
+                            <div
+                              key={index}
+                              className="flex items-start gap-3 rounded-xl bg-slate-50 p-3"
+                            >
+
+                              <span className="font-bold text-blue-600">
+                                ✓
+                              </span>
+
+                              <p className="text-sm text-slate-700">
+                                {typeof item === "string"
+                                  ? item
+                                  : item.title ||
+                                    item.description ||
+                                    JSON.stringify(item)}
+                              </p>
+
+                            </div>
+
+                          )
+                        )}
+
+                      </div>
+
+                    </div>
+
+                  )}
+
+                {/* =================================================
+                    CERTIFICATION
+                ================================================= */}
+
+                {isMatched &&
+                  standard?.certificationInformation && (
+
+                    <div className="rounded-2xl border bg-white p-6 shadow-sm">
+
+                      <p className="text-sm font-medium text-slate-500">
+                        Certification Information
+                      </p>
+
+                      <p className="mt-2 text-sm leading-6 text-slate-700">
+                        {standard.certificationInformation}
+                      </p>
+
+                    </div>
+
+                  )}
+
+                {/* =================================================
+                    VERIFY NOTE
+                ================================================= */}
+
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+
+                  <p className="font-semibold text-amber-900">
+                    ⚠️ Verification Required
+                  </p>
+
+                  <p className="mt-2 text-sm leading-6 text-amber-800">
+                    This is a preliminary compliance assessment.
+                    Verify the exact applicable BIS standard and
+                    current regulatory requirements before relying
+                    on the result.
+                  </p>
+
+                </div>
+
+                {/* =================================================
+                    READINESS BUTTON
+                ================================================= */}
 
                 {onGoToReadiness && (
 
                   <button
                     onClick={onGoToReadiness}
-                    className="w-full rounded-xl bg-blue-600 px-6 py-4 font-semibold text-white shadow-md hover:bg-blue-700"
+                    className="w-full rounded-xl bg-blue-600 px-6 py-4 font-semibold text-white shadow-md transition hover:bg-blue-700"
                   >
                     Check Compliance Readiness →
                   </button>
@@ -415,6 +782,10 @@ function ProductAnalyzer({
         </div>
 
       </main>
+
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
 
       <footer className="border-t bg-white">
 
