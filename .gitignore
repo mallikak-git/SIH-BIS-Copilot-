@@ -5,3 +5,5 @@ __pycache__/
 vector_store/
 backend/.env
 backend/node_modules/
+# SQLite database
+backend/database/*.db
